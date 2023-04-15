@@ -16,7 +16,7 @@ Boruta
 
 ranger
 
-## Binary Classifier:
+## Binary Classifier Instructions:
 
 First, the data will be loaded and be cleaned by having it features named correctly. Next, the outcomes was also created and loaded correctly as well. The outcomes should be marked correctly as either 0 or 1 depending the target column.
 
@@ -28,7 +28,7 @@ We also hypertune SVM with radial and linear kernels.
 
 Once we get good training accuracy, we will use the models on the testing data and print into text file.
 
-## Multiclass Classifier
+## Multiclass Classifier Instructions:
 
 Note the multiclass classifer steps are same as that of binary classifer, except for feature selection and models chosen.
 
@@ -43,6 +43,11 @@ We also hypertune SVM with radial and linear kernels.
 
 Once we get good training accuracy, we will use the models on the testing data and print into text file.
 
+Baseline Algorithm:
+
+Final Algorithm:
+
+Leaderboard Performance:
 
 ## Future Directions / Improvements:
 The multiclass model significantly required a large amount of time to select features for model training. We can possibly look at PCA over the Boruta package used. The PCA will reduce a large amount of dimensionality represented by the data. This will improve our accuracy.
