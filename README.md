@@ -16,6 +16,8 @@ Boruta
 
 ranger
 
+MASS
+
 ## Binary Classifier Instructions:
 
 First, the data will be loaded and be cleaned by having it features named correctly. Next, the outcomes was also created and loaded correctly as well. The outcomes should be marked correctly as either 0 or 1 depending the target column.
