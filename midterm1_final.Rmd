@@ -1,0 +1,493 @@
+---
+title: "Midterm 1 Final"
+author: "Edward Shao"
+date: "4/15/2023"
+output: pdf_document
+---
+
+## Binary
+
+# libraries and loading data
+```{r}
+library(neuralnet)
+library(glmnet)
+library(e1071)
+library(MASS)
+
+data = read.table("C:/Users/s-edw/Downloads/training_data.txt")
+features = as.character(unlist(data[1,]))
+data = data[-1,]
+colnames(data)= features
+```
+
+# loading the y's or the state
+```{r}
+outcome = rep(0,nrow(data))
+
+for (i in 1:length(data[,2])) 
+  {
+    if(data[i,2]%in% c("1","2","3"))
+    {
+      outcome[i] = 1
+    }
+  
+}
+data[] <- lapply(data, as.numeric)
+```
+
+# feature selection
+
+```{r}
+fit <- cv.glmnet(as.matrix(data[,-c(1,2)]), outcome,family="binomial")
+selected_features <- coef(fit, s = "lambda.min")[-1,]
+selected_features <- names(selected_features[which(selected_features != 0)])
+```
+
+
+
+
+# Hold one leave one outvalidation and training
+```{r}
+training_data_rows <- floor(0.70 * nrow(data))          
+set.seed(123) 
+index <- sample(c(1:nrow(data)), training_data_rows)
+train.X=data[index,selected_features]
+test.X=data[-index,selected_features]
+train.Y = outcome[index]
+test.Y=outcome[-index]
+#Logistic regression
+glm.fits = glm(train.Y ~ ., data = as.data.frame(train.X), family = binomial)
+print(glm.fits)
+
+glm.probs=predict(glm.fits, as.data.frame(test.X), type="response")
+
+glm.pred = rep(0, length(outcome[-index]))
+glm.pred[glm.probs > 0.5] = 1
+#table(glm.pred, test.Y)
+
+mean(glm.pred == test.Y)
+
+#LDA
+lda.fit = lda(train.Y ~ ., data = as.data.frame(train.X))
+
+
+
+lda.pred = predict(lda.fit, as.data.frame(test.X))
+
+lda.class = lda.pred$class
+#table(lda.class, test.Y)
+lda_pred = as.numeric(lda.class) - 1
+
+mean(lda_pred == test.Y)
+
+
+
+#SVM with linear kernel
+svmfit = svm(as.factor(train.Y) ~ ., data = as.data.frame(train.X),
+             kernel="linear", scale=F, cost=10)
+
+lin_pred = predict(svmfit, as.data.frame(test.X),type = "class")
+#table(pred,test.Y)
+
+mean(test.Y == lin_pred)
+
+
+#SVM with Radial kernel
+svmfit = svm(as.factor(train.Y) ~ ., data = as.data.frame(train.X),
+             kernel="radial", scale=F, cost=10)
+
+rad_pred = predict(svmfit, as.data.frame(test.X),type = "class")
+mean(test.Y == rad_pred)
+
+
+
+
+
+nn.fit = neuralnet(train.Y ~ ., data = as.data.frame(train.X),
+hidden = 3, act.fct = "logistic",
+linear.output=F)
+nn.test = compute(nn.fit,test.X)
+nn.prob = nn.test$net.result
+nn.pred = (nn.prob>=0.5)+0
+mean(nn.pred == test.Y)
+
+
+
+glm.fit=multinom(train.Y ~ ., data = as.data.frame(train.X))
+glm_pred = predict(glm.fit, as.data.frame(test.X), type="class")
+mean(glm_pred == test.Y)
+
+
+vote_vec = as.numeric(glm.pred) + (as.numeric(lin_pred)-1) +
+as.numeric(lda_pred) + (as.numeric(rad_pred)-1) + as.numeric(c(nn.pred))+as.numeric(glm_pred)
+
+ensemble.pred = rep(0, length(vote_vec))
+ensemble.pred[vote_vec>=3] = 1
+
+mean(ensemble.pred == test.Y)
+
+```
+
+```{r}
+baseline_binary = data.frame(mean(glm.pred == test.Y), mean(lda_pred == test.Y),mean(test.Y == lin_pred),mean(test.Y == rad_pred),mean(nn.pred == test.Y),mean(glm_pred == test.Y))
+
+colnames(baseline_binary) = c("Logistic Regression", "LDA", "SVM Linear", "SVM Radial", "Neural Network", "Multinomial Log Linear")
+
+finish_binary = data.frame(mean(glm.pred == test.Y), mean(lda_pred == test.Y),mean(test.Y == lin_pred),mean(test.Y == rad_pred),mean(nn.pred == test.Y),mean(glm_pred == test.Y),mean(ensemble.pred == test.Y))
+colnames(finish_binary) = c("Logistic Regression", "LDA", "SVM Linear", "SVM Radial", "Neural Network", "Multinomial Log Linear","Ensemble Method")
+
+baseline_binary
+finish_binary
+```
+
+
+
+
+
+
+```{r}
+binary_training = mean(ensemble.pred == test.Y)
+```
+
+
+# Prediction and loading into text file
+
+```{r}
+testing = read.table("C:/Users/s-edw/Downloads/test_data.txt")
+features = as.character(unlist(testing[1,]))
+testing = testing[-1,]
+colnames(testing)= features
+testing[] <- lapply(testing, as.numeric)
+testing = testing[,selected_features]
+
+
+#Logistic regression
+glm.fits = glm(outcome ~ ., data = as.data.frame(data[,selected_features]), family = binomial)
+glm.probs=predict(glm.fits, as.data.frame(testing), type="response")
+glm.probs[which(glm.probs > 0.5)] = 1
+glm.probs[which(glm.probs <= 0.5)] = 0
+glm.pred = glm.probs
+
+
+#LDA
+lda.fit = lda(outcome ~ ., data = as.data.frame(data[,selected_features]))
+lda.pred = predict(lda.fit, as.data.frame(testing))
+lda.class = lda.pred$class
+lda_pred = as.numeric(lda.class) - 1
+
+
+#SVM with linear kernel
+svmfit = svm(as.factor(outcome) ~ ., data = as.data.frame(data[,selected_features]),
+             kernel="linear", scale=F, cost=10)
+lin_pred = predict(svmfit, as.data.frame(testing),type = "class")
+
+
+#SVM with Radial kernel
+svmfit = svm(as.factor(outcome) ~ ., data = as.data.frame(data[,selected_features]),
+             kernel="radial", scale=F, cost=10)
+rad_pred = predict(svmfit, as.data.frame(testing),type = "class")
+
+
+nn.fit = neuralnet(outcome ~ ., data = as.data.frame(data[,selected_features]),
+hidden = 3, act.fct = "logistic",
+linear.output=F)
+nn.test = compute(nn.fit,testing)
+nn.prob = nn.test$net.result
+nn.pred = (nn.prob>=0.5)+0
+
+
+
+glm.fit=multinom(outcome ~ ., data = as.data.frame(data[,selected_features]))
+glm_pred = predict(glm.fit, as.data.frame(testing), type="class")
+
+
+
+vote_vec = as.numeric(glm.pred) + (as.numeric(lin_pred)-1) +
+as.numeric(lda_pred) + (as.numeric(rad_pred)-1) + as.numeric(c(nn.pred))+(as.numeric(glm_pred)-1)
+
+ensemble.pred = rep(0, length(vote_vec))
+ensemble.pred[vote_vec>=3] = 1
+```
+
+
+# Multiclass
+```{r setup, include=FALSE}
+library(neuralnet)
+library(e1071)
+library(Boruta)
+library(ranger)
+library(nnet)
+library(MASS)
+```
+
+
+```{r}
+data = read.table("C:/Users/s-edw/Downloads/training_data.txt")
+features = as.character(unlist(data[1,]))
+data = data[-1,]
+colnames(data)= features
+
+
+outcome = rep(0,nrow(data))
+
+for (i in 1:length(data[,2])) 
+  {
+    if(data[i,2]%in% c("7","8","9","10","11","12"))
+    {
+      outcome[i] = "7"
+    }
+  else
+  {
+    outcome[i] = data[i,2]
+  }
+  
+}
+data[] <- lapply(data, as.numeric)
+outcome=as.numeric(outcome)
+```
+
+
+```{r}
+# Set number of groups
+num_groups <- 5
+
+# Create a vector of numbers from 1 to 7607
+numbers <- 1:nrow(data)
+
+# Shuffle the order of the numbers
+shuffled_numbers <- sample(numbers)
+
+# Calculate the size of each group
+group_size <- ceiling(length(shuffled_numbers) / num_groups)
+
+# Split the shuffled numbers into equal sized groups
+number_groups <- split(shuffled_numbers, rep(1:num_groups, each = group_size, length.out = length(shuffled_numbers)))
+
+```
+
+
+```{r}
+temp1 = data[number_groups$'1',-c(1,2)]
+boruta.fit1 <- Boruta(outcome[number_groups$'1']~., data = temp1, doTrace = 1)
+print(boruta.fit1)
+
+temp2 = data[number_groups$'2',-c(1,2)]
+boruta.fit2 <- Boruta(outcome[number_groups$'2']~., data = temp2, doTrace = 1)
+print(boruta.fit2)
+
+temp3 = data[number_groups$'3',-c(1,2)]
+boruta.fit3 <- Boruta(outcome[number_groups$'3']~., data = temp3, doTrace = 1)
+print(boruta.fit3)
+
+temp4 = data[number_groups$'4',-c(1,2)]
+boruta.fit4 <- Boruta(outcome[number_groups$'4']~., data = temp4, doTrace = 1)
+print(boruta.fit4)
+
+temp5 = data[number_groups$'5',-c(1,2)]
+boruta.fit5 <- Boruta(outcome[number_groups$'5']~., data = temp5, doTrace = 1)
+print(boruta.fit5)
+```
+
+
+```{r}
+selected_features = intersect(intersect(intersect(intersect(getSelectedAttributes(boruta.fit1), getSelectedAttributes(boruta.fit2)), getSelectedAttributes(boruta.fit3)), getSelectedAttributes(boruta.fit4)), getSelectedAttributes(boruta.fit5))
+```
+
+
+
+```{r}
+training_data_rows <- floor(0.70 * nrow(data))          
+set.seed(123) 
+index <- sample(c(1:nrow(data)), training_data_rows)
+train.X=data[index,selected_features]
+test.X=data[-index,selected_features]
+train.Y = outcome[index]
+test.Y=outcome[-index]
+
+```
+
+
+
+```{r}
+for(i in 1:30)
+{
+  
+  #SVM with Radial kernel
+svmfit = svm(as.factor(train.Y) ~ ., data = as.data.frame(train.X),
+             kernel="radial", scale=F, cost=i)
+rad_pred = predict(svmfit, as.data.frame(test.X),type = "class")
+print(mean(test.Y == rad_pred))
+  
+
+#SVM with linear kernel
+svmfit = svm(as.factor(train.Y) ~ ., data = as.data.frame(data[index,-c(1,2)]),
+             kernel="linear", scale=F, cost=i)
+
+lin_pred = predict(svmfit, as.data.frame(data[-index,-c(1,2)]),type = "class")
+#table(pred,test.Y)
+
+mean(test.Y == lin_pred)
+}
+```
+
+
+
+```{r}
+svmfit = svm(as.factor(train.Y) ~ ., data = as.data.frame(train.X),
+             kernel="linear", scale=F, cost=15)
+lin_pred = predict(svmfit, as.data.frame(test.X),type = "class")
+print(mean(test.Y == lin_pred))
+
+
+#SVM with Radial kernel
+svmfit = svm(as.factor(train.Y) ~ ., data = as.data.frame(train.X),
+             kernel="radial", scale=F, cost=15)
+rad_pred = predict(svmfit, as.data.frame(test.X),type = "class")
+print(mean(test.Y == rad_pred))
+
+#LDA
+lda.fit = lda(train.Y ~ ., data = as.data.frame(train.X))
+
+
+
+lda.pred = predict(lda.fit, as.data.frame(test.X))
+
+lda.class = lda.pred$class
+#table(lda.class, test.Y)
+lda_pred = as.numeric(lda.class)
+
+mean(lda_pred == test.Y)
+
+
+
+glm.fit=multinom(train.Y ~ ., data = as.data.frame(train.X))
+#summary(glm.fit)
+#Prediction
+glm_pred = predict(glm.fit, as.data.frame(test.X), type="class")
+mean(glm_pred == test.Y)
+
+
+#SVM with linear kernel
+svmfit = svm(as.factor(train.Y) ~ ., data = as.data.frame(data[index,-c(1,2)]),
+             kernel="linear", scale=F, cost=15)
+
+lin_pred = predict(svmfit, as.data.frame(data[-index,-c(1,2)]),type = "class")
+#table(pred,test.Y)
+
+mean(test.Y == lin_pred)
+
+
+ensemble.pred = rep(0, length(lda_pred))
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+for (i in 1:length(lda_pred)) 
+{
+  ensemble.pred[i]= getmode(c( as.numeric(glm_pred)[i], lda_pred[i],    as.numeric(rad_pred)[i], as.numeric(lin_pred)[i]     ))
+}
+mean(ensemble.pred == test.Y)
+```
+
+```{r}
+baseline_multiclass = data.frame( mean(lda_pred == test.Y),mean(test.Y == lin_pred),mean(test.Y == rad_pred),mean(glm_pred == test.Y))
+
+colnames(baseline_multiclass) = c( "LDA", "SVM Linear", "SVM Radial","Multinomial Log Linear")
+
+finish_multiclass = data.frame( mean(lda_pred == test.Y),mean(test.Y == lin_pred),mean(test.Y == rad_pred),mean(glm_pred == test.Y),mean(ensemble.pred == test.Y))
+colnames(finish_multiclass) = c( "LDA", "SVM Linear", "SVM Radial",  "Multinomial Log Linear","Ensemble Method")
+
+baseline_multiclass
+finish_multiclass
+```
+
+
+
+```{r}
+multiclass_training = mean(ensemble.pred == test.Y)
+```
+
+
+```{r}
+testing = read.table("C:/Users/s-edw/Downloads/test_data.txt")
+features = as.character(unlist(testing[1,]))
+colnames(testing)= features
+testing=testing[-1,]
+testing[] <- lapply(testing, as.numeric)
+testing = testing[,selected_features]
+
+
+#SVM with linear kernel
+svmfit = svm(as.factor(outcome) ~ ., data = as.data.frame(data[,selected_features]),
+             kernel="linear", scale=F, cost=15)
+
+linear_pred = predict(svmfit, as.data.frame(testing),type = "class")
+
+#SVM with Radial kernel
+svmfit = svm(as.factor(outcome) ~ ., data = as.data.frame(data[,selected_features]),
+             kernel="radial", scale=F, cost=15)
+
+rad_pred = predict(svmfit, as.data.frame(testing),type = "class")
+
+
+
+
+glm.fit=multinom(as.factor(outcome) ~ ., data = as.data.frame(data[,selected_features]))
+glm_pred = predict(glm.fit, as.data.frame(testing), type="class")
+
+
+
+#LDA
+lda.fit = lda(as.factor(outcome) ~ ., data = as.data.frame(data[,selected_features]))
+
+
+
+lda.pred = predict(lda.fit, as.data.frame(testing))
+
+lda.class = lda.pred$class
+lda_pred = as.numeric(lda.class)
+
+
+ensemble.pred = rep(0, length(lda_pred))
+getmode <- function(v) {
+   uniqv <- unique(v)
+   uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+for (i in 1:length(lda_pred)) 
+{
+  ensemble.pred[i]= getmode(c( as.numeric(glm_pred)[i], lda_pred[i],    as.numeric(rad_pred)[i], as.numeric(lin_pred)[i]     ))
+}
+```
+
+
+```{r}
+ensemble.pred = as.numeric(ensemble.pred)
+# Replace "your_SID" with your own submission ID
+SID <- "5069"
+
+# Create a data frame with one column containing the vector
+df <- data.frame(ensemble.pred)
+
+# Write the data frame to a text file, excluding row names and column names
+write.table(df, file = paste0("multiclass_", SID, ".txt"), row.names = FALSE, col.names = FALSE)
+```
+
+
+
+
+## Tables and Figures
+
+## Leaderboard
+```{r}
+leaderboard_training=data.frame(binary_training,multiclass_training)
+colnames(leaderboard_training) = c("Binary Classifier", "Multiclass Classifer")
+leaderboard_training
+```
+
+```{r}
+leaderboard_testing=data.frame(0.999,0.948)
+colnames(leaderboard_testing) = c("Binary Classifier", "Multiclass Classifer")
+leaderboard_testing
+```
+
+
