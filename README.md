@@ -47,7 +47,29 @@ Once we get good training accuracy, we will use the models on the testing data a
 
 Baseline Algorithm:
 
+For the binary classifier, we first do a lasso regression on our training data to select our features. Then, we splitted the training data into 70 percent training and 30 percent validation. We fitted the logistic regression, linear discriminant analysis, SVM with linear kernel, SVM with radial kernel, neural network, and multinomial log linear model. The neural network has three hidden layers, and both of the SVM models have the cost of 10.
+
+Below is the accuracy results of the baseline algorithms for the binary classifier:
+![Screenshot 2023-04-15 181148](https://user-images.githubusercontent.com/114368995/232257795-465d3acc-1d24-454f-8d04-c4780fca673a.png)
+
+
+For the multiclass classifier, we utilized the cross validation with 5 fold in our feature selection. The feature selection was composed by the Boruta Package, which is random forest classification. We also splitted the training data into 70 percent training and 30 percent validation. For model training, we choose SVM with linear kernel, SVM with radial kernel, linear discriminant analysis, and multinomial log linear model. We also hypertune the parameters for SVM, which both resulted in 15 costs.
+
+Below is the accuracy results of the baseline algorithms for the multiclass classifier:
+![Screenshot 2023-04-15 181706](https://user-images.githubusercontent.com/114368995/232257810-53758d6b-873f-4022-9bfb-b9a9ce92c445.png)
+
+
 Final Algorithm:
+
+For the binary classifier, to improve the accuracy, I used the ensemble method, which composed of all algorithms used in the baseline algorithm: logistic regression, linear discriminant analysis, SVM with linear kernel, SVM with radial kernel, neural network, and multinomial log linear model. I also hypertune the parameters for the SVM models.
+
+Below is the accuracy results of the ensemble method and the baseline algorithms for binary:
+![Screenshot 2023-04-15 191207](https://user-images.githubusercontent.com/114368995/232257827-fb6632f6-d113-4312-b241-d2563a2d2b6c.png)
+
+For the multiclass classifier, we simply used the ensemble method like in the binary classifier to improve our accuracy. We also used cross validation in feature selection and hypertung for more optimization.
+
+Below is the accuracy results of the ensemble method and the baseline algorithms for multiclass:
+
 
 Leaderboard Performance:
 
