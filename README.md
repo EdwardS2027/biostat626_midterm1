@@ -51,6 +51,15 @@ Final Algorithm:
 
 Leaderboard Performance:
 
+Here is the accuracy result of the models being used on the training data:
+![Screenshot 2023-04-15 140702](https://user-images.githubusercontent.com/114368995/232246371-532801c3-7b3b-4eb6-a4e1-8e9af2c5345a.png)
+
+
+Here is the accuracy result of the models being used on the testing data:
+![image](https://user-images.githubusercontent.com/114368995/232246296-dabf5203-156f-4cb8-9bde-aa0a387f8372.png)
+
+
+While the performances of both binary classifiers are the same, we tried to improve the performance of the multiclass classifier by utilizing cross validation in feature selection and using the Boruta package. This is because the testing performance was lower than the training performance, which was due to overfitting. We tried to overcome this issue through cross validation. Furthermore, due to complexity caused by the multiclass data, we used the Boruta package to select our features.
 ## Future Directions / Improvements:
 The multiclass model significantly required a large amount of time to select features for model training. We can possibly look at PCA over the Boruta package used. The PCA will reduce a large amount of dimensionality represented by the data. This will improve our accuracy.
 
