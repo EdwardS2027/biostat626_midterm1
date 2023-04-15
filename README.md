@@ -56,7 +56,7 @@ Below is the accuracy results of the baseline algorithms for the binary classifi
 For the multiclass classifier, we utilized the cross validation with 5 fold in our feature selection. The feature selection was composed by the Boruta Package, which is random forest classification. We also splitted the training data into 70 percent training and 30 percent validation. For model training, we choose SVM with linear kernel, SVM with radial kernel, linear discriminant analysis, and multinomial log linear model. We also hypertune the parameters for SVM, which both resulted in 15 costs.
 
 Below is the accuracy results of the baseline algorithms for the multiclass classifier:
-![Screenshot 2023-04-15 181706](https://user-images.githubusercontent.com/114368995/232257810-53758d6b-873f-4022-9bfb-b9a9ce92c445.png)
+![Screenshot 2023-04-15 191207](https://user-images.githubusercontent.com/114368995/232257849-c337de52-2a67-42dd-9c26-b03770850155.png)
 
 
 Final Algorithm:
@@ -64,11 +64,13 @@ Final Algorithm:
 For the binary classifier, to improve the accuracy, I used the ensemble method, which composed of all algorithms used in the baseline algorithm: logistic regression, linear discriminant analysis, SVM with linear kernel, SVM with radial kernel, neural network, and multinomial log linear model. I also hypertune the parameters for the SVM models.
 
 Below is the accuracy results of the ensemble method and the baseline algorithms for binary:
-![Screenshot 2023-04-15 191207](https://user-images.githubusercontent.com/114368995/232257827-fb6632f6-d113-4312-b241-d2563a2d2b6c.png)
+![Screenshot 2023-04-15 191207](https://user-images.githubusercontent.com/114368995/232257862-d7bef13d-b8c8-43bd-a932-4b4ba4783793.png)
+
 
 For the multiclass classifier, we simply used the ensemble method like in the binary classifier to improve our accuracy. We also used cross validation in feature selection and hypertung for more optimization.
 
 Below is the accuracy results of the ensemble method and the baseline algorithms for multiclass:
+![Screenshot 2023-04-15 191250](https://user-images.githubusercontent.com/114368995/232257870-e85ecedc-e473-4800-8214-d238c183648e.png)
 
 
 Leaderboard Performance:
