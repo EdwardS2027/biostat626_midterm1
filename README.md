@@ -42,3 +42,11 @@ For model training,hold one leave one out validation was used where random 70 pe
 We also hypertune SVM with radial and linear kernels.
 
 Once we get good training accuracy, we will use the models on the testing data and print into text file.
+
+
+## Future Directions / Improvements:
+The multiclass model significantly required a large amount of time to select features for model training. We can possibly look at PCA over the Boruta package used. The PCA will reduce a large amount of dimensionality represented by the data. This will improve our accuracy.
+
+Additionally, for model training, insteading of using hold one leave one out set, we can look into 5 or 10 fold cross validation. This can help give us a true accuracy of our model and prevent overfitting.
+
+Lastly, we should also do more hypertuning of the parameters in our models. This will tailor our models to the data to get better accuracy.
